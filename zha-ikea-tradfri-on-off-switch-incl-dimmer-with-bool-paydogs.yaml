@@ -28,8 +28,8 @@ blueprint:
           - domain:
             - light
     manual:
-      name: manualFlag
-      description: The switch to follow the manual trigger intent
+      name: Manual control
+      description: The flag witch follows the users manual trigger intent
       selector:
         target:
           entity:
