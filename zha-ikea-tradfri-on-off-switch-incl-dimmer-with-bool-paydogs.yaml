@@ -1,0 +1,111 @@
+blueprint:
+  name: ZHA - IKEA Tradfri on/off switch fork
+  description: '"Control your light(s) with IKEA Tradfri on/off switch
+
+
+    Select the Tradfri remote and your lights.
+
+    You can turn the lights On / Off, or hold the buttons to dim the lights"
+
+    '
+  domain: automation
+  input:
+    remote:
+      name: Remote
+      description: The remote that will control the lights
+      selector:
+        device:
+          integration: zha
+          manufacturer: IKEA of Sweden
+          model: TRADFRI on/off switch
+          multiple: false
+    light:
+      name: Light
+      description: The lights that will be controlled
+      selector:
+        target:
+          entity:
+          - domain:
+            - light
+    manual:
+      name: manualFlag
+      description: The switch to follow the manual trigger intent
+      selector:
+        target:
+          entity:
+          - domain:
+            - switch
+  source_url: https://github.com/Paydogs/homeassistant/blob/master/zha-ikea-tradfri-on-off-switch-incl-dimmer-with-bool-paydogs.yaml
+mode: restart
+trigger:
+- platform: event
+  event_type: zha_event
+  event_data:
+    device_id: !input remote
+action:
+- variables:
+    command: '{{ trigger.event.data.command }}'
+    cluster_id: '{{ trigger.event.data.cluster_id }}'
+    endpoint_id: '{{ trigger.event.data.endpoint_id }}'
+- choose:
+  - conditions:
+    - '{{ command == ''on'' }}'
+    - '{{ cluster_id == 6 }}'
+    - '{{ endpoint_id == 1 }}'
+    sequence:
+    - service: light.turn_on
+      target: !input light
+      data:
+        transition: 1
+    - service: switch.turn_on
+      target: !input manual
+  - conditions:
+    - '{{ command == ''off'' }}'
+    - '{{ cluster_id == 6 }}'
+    - '{{ endpoint_id == 1 }}'
+    sequence:
+    - service: light.turn_off
+      target: !input light
+      data:
+        transition: 1
+    - service: switch.turn_off
+      target: !input manual
+  - conditions:
+    - '{{ command == ''move_with_on_off'' }}'
+    - '{{ cluster_id == 8 }}'
+    - '{{ endpoint_id == 1 }}'
+    sequence:
+      repeat:
+        while:
+        - condition: template
+          value_template: '{{ repeat.index < 10 }}'
+        sequence:
+        - service: light.turn_on
+          target: !input light
+          data:
+            transition: 1
+            brightness_step_pct: 20
+        - delay: 1
+  - conditions:
+    - '{{ command == ''move'' }}'
+    - '{{ cluster_id == 8 }}'
+    - '{{ endpoint_id == 1 }}'
+    sequence:
+      repeat:
+        while:
+        - condition: template
+          value_template: '{{ repeat.index < 10 }}'
+        sequence:
+        - service: light.turn_on
+          target: !input light
+          data:
+            transition: 1
+            brightness_step_pct: -20
+        - delay: 1
+  - conditions:
+    - '{{ command == ''stop'' }}'
+    - '{{ cluster_id == 8 }}'
+    - '{{ endpoint_id == 1 }}'
+    sequence:
+    - service: light.turn_on
+      target: !input light
