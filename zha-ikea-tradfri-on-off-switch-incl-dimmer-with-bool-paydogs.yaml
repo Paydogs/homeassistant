@@ -34,7 +34,7 @@ blueprint:
         target:
           entity:
           - domain:
-            - switch
+            - input_boolean
   source_url: https://github.com/Paydogs/homeassistant/blob/master/zha-ikea-tradfri-on-off-switch-incl-dimmer-with-bool-paydogs.yaml
 mode: restart
 trigger:
@@ -57,7 +57,7 @@ action:
       target: !input light
       data:
         transition: 1
-    - service: switch.turn_on
+    - service: input_boolean.turn_on
       target: !input manual
   - conditions:
     - '{{ command == ''off'' }}'
@@ -68,7 +68,7 @@ action:
       target: !input light
       data:
         transition: 1
-    - service: switch.turn_off
+    - service: input_boolean.turn_off
       target: !input manual
   - conditions:
     - '{{ command == ''move_with_on_off'' }}'
